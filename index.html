@@ -1,0 +1,210 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+  .wrap { padding: 1rem 0; }
+  .intro { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 1.5rem; line-height: 1.6; }
+  .type-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 2rem; }
+  .type-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
+  .type-header { padding: 12px 14px 10px; display: flex; align-items: center; gap: 10px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .color-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+  .type-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); }
+  .type-num { font-size: 11px; color: var(--color-text-secondary); }
+  .questions { padding: 10px 14px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .q-item { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; }
+  .q-item input[type=checkbox] { margin-top: 2px; flex-shrink: 0; cursor: pointer; }
+  .q-label { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; cursor: pointer; }
+  .q-item:hover .q-label { color: var(--color-text-primary); }
+  .score-bar-wrap { padding: 4px 14px 12px; }
+  .score-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; display: flex; justify-content: space-between; }
+  .score-track { height: 5px; background: var(--color-border-tertiary); border-radius: 99px; overflow: hidden; }
+  .score-fill { height: 100%; border-radius: 99px; transition: width 0.3s ease; }
+  .result-banner { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: none; }
+  .result-banner.show { display: block; }
+  .result-title { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 6px; }
+  .result-main { font-size: 16px; font-weight: 500; color: var(--color-text-primary); display: flex; align-items: center; gap: 8px; }
+  .result-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+  .result-sub { font-size: 12px; color: var(--color-text-secondary); margin-top: 6px; line-height: 1.5; }
+  .reset-btn { font-size: 12px; margin-top: 10px; }
+</style>
+
+<div class="wrap">
+  <p class="intro">各タイプの質問に「はい」の場合はチェックを入れてください。チェック数が最も多いタイプが、自社の採用コンセプトの方向性です。</p>
+
+  <div id="result-banner" class="result-banner">
+    <div class="result-title">最も当てはまる採用コンセプトタイプ</div>
+    <div class="result-main">
+      <div class="result-dot" id="result-dot"></div>
+      <span id="result-text">—</span>
+    </div>
+    <div class="result-sub" id="result-sub"></div>
+    <button class="reset-btn" onclick="resetAll()">チェックをリセットする</button>
+  </div>
+
+  <div class="type-grid" id="type-grid"></div>
+</div>
+
+<script>
+const TYPES = [
+  {
+    id: 1,
+    name: "「社会のためになる会社」型",
+    color: "#1D9E75",
+    sub: "社会課題・地域貢献・人の役に立つことを採用の核に据えるタイプです。",
+    qs: [
+      "医療・介護・福祉・教育・環境など、社会に直結する業界で事業を行っている",
+      "地域の人々の暮らしや問題に関わる商品・サービスを提供している",
+      "「この仕事は誰かの役に立っている」と社長や幹部が普段から口にする",
+      "利益よりも「お客様・社会のためになっているか」を重視する社風がある",
+      "自社の商品・サービスが、困っている人の具体的な問題を解決している",
+      "入社理由や働くモチベーションに「社会貢献したい」を挙げる社員が多い"
+    ]
+  },
+  {
+    id: 2,
+    name: "「最先端の技術・仕事ができる会社」型",
+    color: "#185FA5",
+    sub: "最新技術・設備・未踏領域への挑戦を採用の魅力として打ち出すタイプです。",
+    qs: [
+      "IT・AI・製造業・研究開発など、技術力が競争力の中心にある業界にいる",
+      "業界内で「新しい技術や設備を積極的に取り入れている会社」として認識されている",
+      "新しいシステム・機械・手法への投資を惜しまない文化がある",
+      "「うちの会社ならではの技術・設備」を社員が誇りに思っている",
+      "入社すれば、他社ではできない専門的な技術や知識が身につく仕事がある",
+      "研究・開発・実証など、まだ世の中にない取り組みを社内で進めている"
+    ]
+  },
+  {
+    id: 3,
+    name: "「厳しいけど速く成長できる会社」型",
+    color: "#D85A30",
+    sub: "高い基準・速い成長・実力主義を魅力として打ち出すタイプです。",
+    qs: [
+      "競合が多く、スピードと実力が問われる業界・市場にいる",
+      "成果を出せば年次に関係なく昇進・昇給できる仕組みがある",
+      "「成長したい・鍛えられたい人」を採用したいと経営者が明確に思っている",
+      "成果主義・実力主義の評価文化が根づいている",
+      "若手・新卒でも早い段階から責任のある仕事を任せている",
+      "「ここで3〜5年働けば、どこでも通用する人材になれる」と自信を持って言える"
+    ]
+  },
+  {
+    id: 4,
+    name: "「良い商品・サービスをつくる会社」型",
+    color: "#BA7517",
+    sub: "品質へのこだわり・ものづくりの誇りを採用の核に据えるタイプです。",
+    qs: [
+      "製造・食品・建設・サービス業など、品質や職人気質が強みの業種にいる",
+      "お客様から「御社の商品（サービス）でないとダメ」と言ってもらえることがある",
+      "「細部にこだわる・品質を妥協しない」が社内の共通価値観になっている",
+      "品質・技術・サービス改善に時間とコストを積極的にかけている",
+      "採用した人に「お客様のために良いものをつくる仕事」を任せることになる",
+      "自社の商品・サービスに対して愛着や誇りを持って働いている社員が多い"
+    ]
+  },
+  {
+    id: 5,
+    name: "「自分で仕事をつくれる会社」型",
+    color: "#534AB7",
+    sub: "裁量・事業創造・オーナーシップを採用の魅力として打ち出すタイプです。",
+    qs: [
+      "新規事業・新サービス開発に積極的で、社内に起業家的な雰囲気がある",
+      "「言われた仕事をこなすだけでなく、自分で考えて動ける人」を求めている",
+      "社員が社長や幹部に直接提案でき、採用されることがある",
+      "「失敗してもいいから、まずやってみろ」という雰囲気がある",
+      "社員一人ひとりが担当範囲を広く持ち、裁量を持って動ける環境がある",
+      "将来的に管理職・事業責任者・独立を目指せるキャリアパスがある"
+    ]
+  },
+  {
+    id: 6,
+    name: "「自分らしく働ける・居心地のいい会社」型",
+    color: "#D4537E",
+    sub: "多様性・帰属意識・安心感を採用の核に据えるタイプです。",
+    qs: [
+      "女性・シニア・外国人・未経験者など、多様な人材が活躍している（またはしてほしい）",
+      "人材不足が深刻で、これまで採用できていなかった層を取り込みたい",
+      "「アットホーム・人間関係が良い」と退職者アンケートや口コミで言われることが多い",
+      "個性や異なるバックグラウンドを尊重・歓迎する雰囲気がある",
+      "採用時に、スキルよりも人柄・価値観・相性を重視することが多い",
+      "未経験者やキャリアチェンジ者を受け入れ、育てる体制がある"
+    ]
+  },
+  {
+    id: 7,
+    name: "「働き方が柔軟で長く続けられる会社」型",
+    color: "#0F6E56",
+    sub: "柔軟な働き方・定着率・ライフスタイルへの配慮を採用の核に据えるタイプです。",
+    qs: [
+      "専門職・技術職・事務職など、スキルのある人材に長く活躍してほしい職種がある",
+      "育児・介護中の方や、地方在住・Uターン希望者を採用したいと考えている",
+      "「長く続けてもらうこと」を採用において最も重視している",
+      "リモート・時短・フレックスなど、柔軟な働き方の制度が整っている（または整えたい）",
+      "勤続年数が長い社員が多く、定着率の良さが会社の自慢になっている",
+      "育休・産休の取得実績があり、復職後も活躍している社員がいる"
+    ]
+  },
+  {
+    id: 8,
+    name: "「専門家として顧客の課題を解く会社」型",
+    color: "#888780",
+    sub: "高度な専門性・顧客への変革支援を採用の魅力として打ち出すタイプです。",
+    qs: [
+      "コンサル・士業・研修・人材・ITサービスなど、専門知識でお客様を支援する業種にいる",
+      "お客様の「困った」を解決することが、そのまま事業の価値・売上になっている",
+      "「専門家として成長することが、会社の成長につながる」という文化がある",
+      "資格取得・自己研鑽・スキルアップへの会社の支援が充実している",
+      "社員がお客様から「先生・専門家・パートナー」として信頼されている",
+      "担当者一人ひとりが高い専門性を持ち、顧客の課題に深く向き合っている"
+    ]
+  }
+];
+
+const TOTAL_Q = 6;
+const state = {};
+TYPES.forEach(t => { state[t.id] = 0; });
+
+function getScore(typeId) { return state[typeId] || 0; }
+
+function updateResult() {
+  let max = 0, best = null;
+  TYPES.forEach(t => { if (getScore(t.id) > max) { max = getScore(t.id); best = t; } });
+  const banner = document.getElementById('result-banner');
+  if (!best || max === 0) { banner.classList.remove('show'); return; }
+  banner.classList.add('show');
+  document.getElementById('result-dot').style.background = best.color;
+  document.getElementById('result-text').textContent = best.name + '（' + max + '/' + TOTAL_Q + '）';
+  document.getElementById('result-sub').textContent = best.sub;
+}
+
+function updateBar(typeId) {
+  const fill = document.getElementById('fill-' + typeId);
+  const scoreEl = document.getElementById('score-' + typeId);
+  const s = getScore(typeId);
+  if (fill) fill.style.width = (s / TOTAL_Q * 100) + '%';
+  if (scoreEl) scoreEl.textContent = s + '/' + TOTAL_Q;
+}
+
+function resetAll() {
+  TYPES.forEach(t => { state[t.id] = 0; });
+  document.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+  TYPES.forEach(t => updateBar(t.id));
+  document.getElementById('result-banner').classList.remove('show');
+}
+
+const grid = document.getElementById('type-grid');
+TYPES.forEach(t => {
+  const card = document.createElement('div');
+  card.className = 'type-card';
+  const header = `<div class="type-header"><div class="color-dot" style="background:${t.color}"></div><div><div class="type-name">${t.name}</div><div class="type-num">診断項目 ${TOTAL_Q} 問</div></div></div>`;
+  let qs = '<div class="questions">';
+  t.qs.forEach((q, i) => {
+    const cbId = 'cb-' + t.id + '-' + i;
+    qs += `<div class="q-item"><input type="checkbox" id="${cbId}" onchange="(function(el){state[${t.id}] += el.checked ? 1 : -1; updateBar(${t.id}); updateResult();})(this)"><label class="q-label" for="${cbId}">${q}</label></div>`;
+  });
+  qs += '</div>';
+  const bar = `<div class="score-bar-wrap"><div class="score-label"><span>チェック数</span><span id="score-${t.id}">0/${TOTAL_Q}</span></div><div class="score-track"><div class="score-fill" id="fill-${t.id}" style="width:0%;background:${t.color}"></div></div></div>`;
+  card.innerHTML = header + qs + bar;
+  grid.appendChild(card);
+});
+</script>
