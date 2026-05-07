@@ -1,3 +1,9 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>採用コンセプト診断</title>
 
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -27,9 +33,11 @@
   .result-sub { font-size: 12px; color: var(--color-text-secondary); margin-top: 6px; line-height: 1.5; }
   .reset-btn { font-size: 12px; margin-top: 10px; }
 </style>
+</head>
+<body>
 
 <div class="wrap">
-  <p class="intro">各タイプの質問に「はい」の場合はチェックを入れてください。チェック数が最も多いタイプが、自社の採用コンセプトの方向性です。</p>
+  <p class="intro">各タイプの質問に「はい」の場合はチェックを入れてください。チェック数が最も多いタイプが、採用コンセプトの方向性です。</p>
 
   <div id="result-banner" class="result-banner">
     <div class="result-title">最も当てはまる採用コンセプトタイプ</div>
@@ -208,3 +216,5 @@ TYPES.forEach(t => {
   grid.appendChild(card);
 });
 </script>
+</body>
+</html>
